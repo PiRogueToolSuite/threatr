@@ -1,0 +1,77 @@
+version: '3'
+
+volumes:
+  threatr_local_postgres_data: {}
+  threatr_local_postgres_data_backups: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: threatr_local_django
+    container_name: threatr_local_django
+    depends_on:
+      - postgres
+      - redis
+      - worker
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - "9000:8000"
+    command: /start
+
+  worker:
+    <<: *django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: threatr_local_worker
+    container_name: threatr_local_worker
+    platform: linux/x86_64
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    command: /start-worker
+    ports: [ ]
+    labels:
+      - "traefik.enable=false"
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: threatr_production_postgres
+    container_name: threatr_local_postgres
+    volumes:
+      - threatr_local_postgres_data:/var/lib/postgresql/data
+      - threatr_local_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.local/.postgres
+
+  redis:
+    image: redis:6
+
+#  docs:
+#    image: threatr_local_docs
+#    container_name: threatr_local_docs
+#    build:
+#      context: .
+#      dockerfile: ./compose/local/docs/Dockerfile
+#    env_file:
+#      - ./.envs/.local/.django
+#    volumes:
+#      - ./docs:/docs:z
+#      - ./config:/app/config:z
+#      - ./threatr:/app/threatr:z
+#    ports:
+#      - "9000:9000"
+#    command: /start-docs

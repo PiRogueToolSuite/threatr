@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+
+python manage.py migrate --skip-checks
+python manage.py qcluster
