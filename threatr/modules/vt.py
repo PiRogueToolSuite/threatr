@@ -127,8 +127,17 @@ class VirusTotal(AnalysisModule):
             root.attributes['ssdeep'] = response['ssdeep']
         if 'md5' in response:
             root.attributes['md5'] = response['md5']
+        if 'country' in response:
+            root.attributes['geoip_country'] = response['country']
+        if 'continent' in response:
+            root.attributes['geoip_continent'] = response['continent']
+        if 'as_owner' in response:
+            root.attributes['operator'] = response['as_owner']
         malicious, total = _get_vt_score(response)
-        root.attributes['is_malicious'] = malicious > 0
+        if malicious > 0:
+            root.attributes['is_malicious'] = 1
+        else:
+            root.attributes['is_malicious'] = 0
         root.attributes['vt_score'] = f'{malicious}/{total}'
         if 'categories' in response and 'alphaMountain.ai' in response['categories']:
             root.attributes['category'] = response['categories']['alphaMountain.ai']
@@ -174,15 +183,47 @@ class VirusTotal(AnalysisModule):
                     dns_record.attributes = {'source_vendor': self.vendor()}
                     dns_record.save()
 
-                relation, created = EntityRelation.objects.update_or_create(
-                    name='resolves',
-                    obj_from=dns_record,
-                    obj_to=root,
-                )
-                if created:
-                    relation.attributes = {'source_vendor': self.vendor()}
-                    relation.save()
-                relations.append(relation)
+                if t in ['A', 'AAAA']:
+                    ip_type = EntityType.get_types('OBSERVABLE').get('IPV4')
+                    if t == 'AAAA':
+                        ip_type = EntityType.get_types('OBSERVABLE').get('IPV6')
+                    target_ip, created = Entity.objects.update_or_create(
+                        name = v,
+                        super_type=EntitySuperType.get_types().get('OBSERVABLE'),
+                        type=ip_type,
+                    )
+                    if created:
+                        target_ip.attributes = {'source_vendor': self.vendor()}
+                        target_ip.save()
+                    entities.append(target_ip)
+                    record_to_ip, created = EntityRelation.objects.update_or_create(
+                        name='points to',
+                        obj_from=dns_record,
+                        obj_to=target_ip
+                    )
+                    if created:
+                        record_to_ip.attributes = {'source_vendor': self.vendor()}
+                        record_to_ip.save()
+                    relations.append(record_to_ip)
+                    ip_to_domain, created = EntityRelation.objects.update_or_create(
+                        name='resolves',
+                        obj_from=target_ip,
+                        obj_to=root
+                    )
+                    if created:
+                        ip_to_domain.attributes = {'source_vendor': self.vendor()}
+                        ip_to_domain.save()
+                    relations.append(ip_to_domain)
+                else:
+                    relation, created = EntityRelation.objects.update_or_create(
+                        name='resolves',
+                        obj_from=dns_record,
+                        obj_to=root
+                    )
+                    if created:
+                        relation.attributes = {'source_vendor': self.vendor()}
+                        relation.save()
+                    relations.append(relation)
 
         if 'first_submission_date' in response and 'last_submission_date' in response:
             av_submissions, _ = Event.objects.update_or_create(
@@ -199,7 +240,7 @@ class VirusTotal(AnalysisModule):
             events.append(av_submissions)
         if malicious > 0:
             av_analysis, _ = Event.objects.update_or_create(
-                name = 'Latest analysis on VT',
+                name = 'Analysis on VT',
                 type=EntityType.get_types('EVENT').get('AV_DETECTION'),
                 first_seen=datetime.fromtimestamp(response['last_analysis_date']).astimezone(pytz.utc),
                 last_seen=datetime.fromtimestamp(response['last_analysis_date']).astimezone(pytz.utc),

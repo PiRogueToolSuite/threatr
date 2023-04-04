@@ -184,7 +184,7 @@ class Entity(models.Model):
     ]
 
     class Meta:
-        ordering = ['name']
+        ordering = ['type', 'name']
         verbose_name = 'Entity'
         verbose_name_plural = 'Entities'
         unique_together = ['name', 'super_type', 'type']
@@ -251,6 +251,8 @@ class Entity(models.Model):
     )
 
     def __eq__(self, other):
+        if not other:
+            return False
         return str(self.id) == str(other.id)
 
     def __hash__(self):
@@ -323,6 +325,8 @@ class EntityRelation(models.Model):
     )
 
     def __eq__(self, other):
+        if not other:
+            return False
         return str(self.id) == str(other.id)
 
     def __hash__(self):
@@ -334,7 +338,7 @@ class EntityRelation(models.Model):
 
 class Event(models.Model):
     class Meta:
-        ordering = ['type', 'first_seen']
+        ordering = ['-first_seen']
         unique_together = ['type', 'name', 'first_seen', 'last_seen','involved_entity']
 
     id = models.UUIDField(
@@ -363,6 +367,15 @@ class Event(models.Model):
     name = models.CharField(
         max_length=512,
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text=_('Creation date of this object.'),
+        editable=False
+    )
+    updated_at = models.DateTimeField(
+        help_text=_('Latest modification of this object.'),
+        auto_now=True
+    )
     description = models.TextField(
         help_text=_('Add more details about this object.'),
         null=True,
@@ -380,6 +393,8 @@ class Event(models.Model):
         return self.name
 
     def __eq__(self, other):
+        if not other:
+            return False
         return str(self.id) == str(other.id)
 
     def __hash__(self):

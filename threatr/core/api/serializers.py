@@ -49,7 +49,7 @@ class EntityRelationSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    # involved_entity = EntitySerializer(many=False, read_only=True)
+    type = EntityTypeSerializer()
     class Meta:
         model = Event
         fields = '__all__'

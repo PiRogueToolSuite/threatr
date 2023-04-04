@@ -74,7 +74,11 @@ class OTX(AnalysisModule):
         key = self.credentials.get('api_key')
         otx = OTXv2(key)
         otx_type = OTX_TYPES_MAPPING.get(self.request.type.short_name)
-        self.vendor_response = otx.get_indicator_details_full(otx_type, self.request.value)
+        try:
+            self.vendor_response = otx.get_indicator_details_full(otx_type, self.request.value)
+        except Exception as e:
+            logger.exception(e)
+            self.vendor_response = {}
         with open(f'/app/otx_{otx_type}.json', mode='w') as out:
             json.dump(self.vendor_response, out)
         # with open('/app/otx_sha256.json', mode='r') as out:
@@ -140,7 +144,7 @@ class OTX(AnalysisModule):
                     }
                 )
                 if created:
-                    event.attributes = {'source_vendor': self.vendor(), 'count': 1}
+                    event.attributes = {'source_vendor': self.vendor()}
                     event.save()
                 if 'asn' not in event.attributes:
                     event.attributes['asn'] = r.get('asn', '')
