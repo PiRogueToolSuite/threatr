@@ -304,17 +304,17 @@ SPECTACULAR_SETTINGS = {
 # Worker configuration
 # ------------------------------------------------------------------------------
 Q_CLUSTER = {
-    'name': 'Backend',
-    'workers': 4,
-    'recycle': 1,
-    'retry': 36*60,
-    'max_attempts': 5,
-    'timeout': 35*60,
-    'compress': True,
-    'save_limit': 25,
-    'max_rss': 1024 * 1024,
-    'queue_limit': 50,
-    'cpu_affinity': 4,
-    'label': 'Django Q',
-    'redis': env("REDIS_URL")
+    "name": "Backend",
+    "workers": 4,
+    "recycle": 1,
+    "retry": 36 * 60,
+    "max_attempts": 5,
+    "timeout": 35 * 60,
+    "compress": True,
+    "save_limit": 25,
+    "max_rss": 1024 * 1024,
+    "queue_limit": 50,
+    "cpu_affinity": 4,
+    "label": "Django Q",
+    "redis": env("REDIS_URL"),
 }

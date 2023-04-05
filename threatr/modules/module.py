@@ -4,7 +4,6 @@ from threatr.core.models import Request, Entity, EntityRelation, Event
 
 
 class AnalysisModule(ABC):
-
     @classmethod
     @abstractmethod
     def vendor(cls) -> str:

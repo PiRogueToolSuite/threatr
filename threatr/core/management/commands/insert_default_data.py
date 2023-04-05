@@ -7,10 +7,10 @@ from threatr.core.models import EntitySuperType, EntityType
 
 
 class Command(BaseCommand):
-    help = 'Insert default data.'
+    help = "Insert default data."
 
     def handle(self, *args, **options):
-        definitions = 'data/entity_types.json'
+        definitions = "data/entity_types.json"
 
         resource_package = __name__
         types_file = pkg_resources.resource_stream(resource_package, definitions)
@@ -18,18 +18,18 @@ class Command(BaseCommand):
 
         for super_type in entity_types:
             super_type_obj, _ = EntitySuperType.objects.update_or_create(
-                short_name=super_type.get('short_name'),
+                short_name=super_type.get("short_name"),
                 defaults={
-                    'name': super_type.get('name'),
-                    'nf_icon': super_type.get('nf_icon'),
-                }
+                    "name": super_type.get("name"),
+                    "nf_icon": super_type.get("nf_icon"),
+                },
             )
-            for entity_type in super_type.get('types'):
+            for entity_type in super_type.get("types"):
                 EntityType.objects.update_or_create(
-                    short_name=entity_type.get('short_name'),
+                    short_name=entity_type.get("short_name"),
                     super_type=super_type_obj,
                     defaults={
-                        'name': entity_type.get('name'),
-                        'nf_icon': entity_type.get('nf_icon'),
-                    }
+                        "name": entity_type.get("name"),
+                        "nf_icon": entity_type.get("nf_icon"),
+                    },
                 )

@@ -3,7 +3,14 @@ from uuid import UUID
 
 from rest_framework import serializers
 
-from threatr.core.models import EntitySuperType, EntityType, Request, Entity, EntityRelation, Event
+from threatr.core.models import (
+    EntitySuperType,
+    EntityType,
+    Request,
+    Entity,
+    EntityRelation,
+    Event,
+)
 
 old_default = JSONEncoder.default
 
@@ -20,13 +27,13 @@ JSONEncoder.default = new_default
 class EntitySuperTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = EntitySuperType
-        fields = ['name', 'short_name', 'description', 'nf_icon']
+        fields = ["name", "short_name", "description", "nf_icon"]
 
 
 class EntityTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = EntityType
-        fields = ['name', 'short_name', 'description', 'nf_icon']
+        fields = ["name", "short_name", "description", "nf_icon"]
 
 
 class FullEntitySuperTypeSerializer(serializers.ModelSerializer):
@@ -34,7 +41,7 @@ class FullEntitySuperTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EntitySuperType
-        fields = '__all__'
+        fields = "__all__"
 
 
 class EntitySerializer(serializers.ModelSerializer):
@@ -43,7 +50,7 @@ class EntitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Entity
-        fields = '__all__'
+        fields = "__all__"
 
 
 class EntityRelationSerializer(serializers.ModelSerializer):
@@ -51,7 +58,15 @@ class EntityRelationSerializer(serializers.ModelSerializer):
     # obj_to = EntitySerializer(many=False, read_only=True)
     class Meta:
         model = EntityRelation
-        fields = ['id', 'name', 'description', 'created_at', 'attributes', 'obj_from', 'obj_to']
+        fields = [
+            "id",
+            "name",
+            "description",
+            "created_at",
+            "attributes",
+            "obj_from",
+            "obj_to",
+        ]
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -59,7 +74,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = '__all__'
+        fields = "__all__"
 
 
 class RequestSerializer(serializers.ModelSerializer):
@@ -68,4 +83,4 @@ class RequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Request
-        fields = ['id', 'value', 'super_type', 'type', 'status', 'created_at']
+        fields = ["id", "value", "super_type", "type", "status", "created_at"]

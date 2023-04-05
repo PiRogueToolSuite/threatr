@@ -12,17 +12,23 @@ logger = logging.getLogger(__name__)
 
 
 class ModulesLoader:
-    root_module = importlib.import_module('threatr.modules')
+    root_module = importlib.import_module("threatr.modules")
     module_classes = set()
 
     def list_modules(self) -> {type}:
-        for _, modname, _ in pkgutil.walk_packages(path=self.root_module.__path__,
-                                                   prefix=self.root_module.__name__ + '.',
-                                                   onerror=lambda x: None):
+        for _, modname, _ in pkgutil.walk_packages(
+            path=self.root_module.__path__,
+            prefix=self.root_module.__name__ + ".",
+            onerror=lambda x: None,
+        ):
             module = importlib.import_module(modname)
             for name in dir(module):
                 obj = getattr(module, name)
-                if inspect.isclass(obj) and issubclass(obj, AnalysisModule) and not inspect.isabstract(obj):
+                if (
+                    inspect.isclass(obj)
+                    and issubclass(obj, AnalysisModule)
+                    and not inspect.isabstract(obj)
+                ):
                     self.module_classes.add(obj)
         return self.module_classes
 
@@ -31,8 +37,11 @@ class ModulesLoader:
         if not self.module_classes:
             self.list_modules()
         for c in self.module_classes:
-            logger.info(f'Loading analysis module {c} for [{c.vendor()}]')
-            if request.super_type.short_name.lower() in c.handled_super_types() and request.type.short_name.lower() in c.handled_types():  # noqa: E501
+            logger.info(f"Loading analysis module {c} for [{c.vendor()}]")
+            if (
+                request.super_type.short_name.lower() in c.handled_super_types()
+                and request.type.short_name.lower() in c.handled_types()
+            ):  # noqa: E501
                 candidates.add(c)
         return candidates
 
@@ -40,7 +49,7 @@ class ModulesLoader:
 def launch_module(request: Request, handler: type) -> bool:
     credentials = VendorCredentials.objects.filter(vendor=handler.unique_identifier())
     if not credentials:
-        logger.error(f'No credentials found for module {handler.unique_identifier()}')
+        logger.error(f"No credentials found for module {handler.unique_identifier()}")
         return False
 
     # Rotate credentials
