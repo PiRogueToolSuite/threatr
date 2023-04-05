@@ -39,10 +39,14 @@ jobs:
             pip install flake8
       - name: Lint with flake8
         run: |
+          echo $PWD
           flake8
-      # Consider using pre-commit.ci for open source project
-      - name: Run pre-commit
-        uses: pre-commit/action@v3.0.0
+#      - name: Reformat
+#        uses: psf/black@stable
+#        with:
+#          options: "--check --verbose --extend-exclude ./threatr/core/migrations"
+#          src: "./threatr/core"
+#          version: "~= 22.0"
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
   pytest:
