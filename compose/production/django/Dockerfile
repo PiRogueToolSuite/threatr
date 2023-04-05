@@ -64,11 +64,13 @@ COPY --chown=django:django ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
 
-
 COPY --chown=django:django ./compose/production/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
+COPY --chown=django:django ./compose/production/django/django-q/start /start-worker
+RUN sed -i 's/\r$//g' /start-worker
+RUN chmod +x /start-worker
 
 # copy application code to WORKDIR
 COPY --chown=django:django . ${APP_HOME}
