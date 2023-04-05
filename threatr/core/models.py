@@ -1,9 +1,9 @@
 import uuid
 
-from django.utils import timezone
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -117,7 +117,7 @@ class EntityType(models.Model):
     )
 
     @staticmethod
-    def get_types(super_type:str) -> dict:
+    def get_types(super_type: str) -> dict:
         sub_types = {}
         for t in EntityType.objects.filter(super_type=super_type.upper()):
             sub_types[t.short_name] = t
@@ -339,7 +339,7 @@ class EntityRelation(models.Model):
 class Event(models.Model):
     class Meta:
         ordering = ['-first_seen']
-        unique_together = ['type', 'name', 'first_seen', 'last_seen','involved_entity']
+        unique_together = ['type', 'name', 'first_seen', 'last_seen', 'involved_entity']
 
     id = models.UUIDField(
         primary_key=True,

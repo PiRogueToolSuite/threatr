@@ -1,13 +1,15 @@
 import json
 import logging
-import pytz
 from datetime import datetime
+
+import pytz
 from vt import Client
 
 from threatr.core.models import Entity, EntityRelation, Request, EntitySuperType, EntityType, Event
 from threatr.modules.module import AnalysisModule
 
 logger = logging.getLogger(__name__)
+
 
 def _get_vt_score(response):
     total = 0
@@ -17,6 +19,7 @@ def _get_vt_score(response):
         if cat == 'malicious':
             malicious += v
     return malicious, total
+
 
 def _get_vt_threat_cat_and_name(response):
     cat = ''
@@ -33,6 +36,7 @@ def _get_vt_threat_cat_and_name(response):
         if '/' not in cat and cat.upper() in EntityType.get_types('THREAT'):
             threat_type = EntityType.get_types('THREAT').get(cat.upper())
     return cat, name, threat_type
+
 
 class VirusTotal(AnalysisModule):
     request: Request = None
@@ -81,21 +85,21 @@ class VirusTotal(AnalysisModule):
     def execute_request(self) -> dict:
         key = self.credentials.get('api_key')
         vt = Client(key)
-        if self.request.type.short_name.lower() in ['sha256','sha1', 'md5']:
+        if self.request.type.short_name.lower() in ['sha256', 'sha1', 'md5']:
             self.vendor_response = vt.get_json(f'/files/{self.request.value}')
-            with open(f'/app/vt_hash.json', mode='w') as out:
+            with open('/app/vt_hash.json', mode='w') as out:
                 json.dump(self.vendor_response, out)
         elif self.request.type.short_name.lower() in ['domain']:
             self.vendor_response = vt.get_json(f'/domains/{self.request.value}')
-            with open(f'/app/vt_domain.json', mode='w') as out:
+            with open('/app/vt_domain.json', mode='w') as out:
                 json.dump(self.vendor_response, out)
-        elif self.request.type.short_name.lower() in ['ipv4','ipv6']:
+        elif self.request.type.short_name.lower() in ['ipv4', 'ipv6']:
             self.vendor_response = vt.get_json(f'/ip_addresses/{self.request.value}')
-            with open(f'/app/vt_ip.json', mode='w') as out:
+            with open('/app/vt_ip.json', mode='w') as out:
                 json.dump(self.vendor_response, out)
         elif self.request.type.short_name.lower() in ['url']:
             self.vendor_response = vt.get_json(f'/urls/{self.request.value}')
-            with open(f'/app/vt_url.json', mode='w') as out:
+            with open('/app/vt_url.json', mode='w') as out:
                 json.dump(self.vendor_response, out)
         return self.vendor_response
 
@@ -107,9 +111,9 @@ class VirusTotal(AnalysisModule):
         response = self.vendor_response['data']['attributes']
 
         root, created = Entity.objects.update_or_create(
-            name = self.request.value,
-            super_type = self.request.super_type,
-            type = self.request.type,
+            name=self.request.value,
+            super_type=self.request.super_type,
+            type=self.request.type,
         )
         if created:
             root.attributes = {'source_vendor': self.vendor()}
@@ -147,9 +151,9 @@ class VirusTotal(AnalysisModule):
             cat, name, threat_type = _get_vt_threat_cat_and_name(response)
             if name:
                 threat, created = Entity.objects.update_or_create(
-                    name = name if name else 'Uncategorized',
-                    super_type = EntitySuperType.get_types().get('THREAT'),
-                    type = threat_type,
+                    name=name if name else 'Uncategorized',
+                    super_type=EntitySuperType.get_types().get('THREAT'),
+                    type=threat_type,
                 )
                 if created:
                     threat.attributes = {'source_vendor': self.vendor()}
@@ -175,7 +179,7 @@ class VirusTotal(AnalysisModule):
                 t = record['type']
                 v = record['value']
                 dns_record, created = Entity.objects.update_or_create(
-                    name = f'{t} {v}',
+                    name=f'{t} {v}',
                     super_type=EntitySuperType.get_types().get('OBSERVABLE'),
                     type=EntityType.get_types('OBSERVABLE').get('DNS_RECORD'),
                 )
@@ -188,7 +192,7 @@ class VirusTotal(AnalysisModule):
                     if t == 'AAAA':
                         ip_type = EntityType.get_types('OBSERVABLE').get('IPV6')
                     target_ip, created = Entity.objects.update_or_create(
-                        name = v,
+                        name=v,
                         super_type=EntitySuperType.get_types().get('OBSERVABLE'),
                         type=ip_type,
                     )
@@ -227,7 +231,7 @@ class VirusTotal(AnalysisModule):
 
         if 'first_submission_date' in response and 'last_submission_date' in response:
             av_submissions, _ = Event.objects.update_or_create(
-                name = 'Submission on VT',
+                name='Submission on VT',
                 type=EntityType.get_types('EVENT').get('HIT'),
                 first_seen=datetime.fromtimestamp(response['first_submission_date']).astimezone(pytz.utc),
                 last_seen=datetime.fromtimestamp(response['last_submission_date']).astimezone(pytz.utc),
@@ -240,7 +244,7 @@ class VirusTotal(AnalysisModule):
             events.append(av_submissions)
         if malicious > 0:
             av_analysis, _ = Event.objects.update_or_create(
-                name = 'Analysis on VT',
+                name='Analysis on VT',
                 type=EntityType.get_types('EVENT').get('AV_DETECTION'),
                 first_seen=datetime.fromtimestamp(response['last_analysis_date']).astimezone(pytz.utc),
                 last_seen=datetime.fromtimestamp(response['last_analysis_date']).astimezone(pytz.utc),
@@ -259,5 +263,3 @@ class VirusTotal(AnalysisModule):
 
     def get_results(self) -> ([Entity], [EntityRelation], [Event]):
         return self.entities, self.relations, self.events
-
-

@@ -5,7 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.authtoken.models import Token
 
 
-
 class User(AbstractUser):
     """
     Default custom user model for threatr.

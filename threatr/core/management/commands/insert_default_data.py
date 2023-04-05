@@ -1,8 +1,9 @@
-from django.core.management.base import BaseCommand, CommandError
-import pkg_resources
 import json
 
-from threatr.core.models import *
+import pkg_resources
+from django.core.management.base import BaseCommand
+
+from threatr.core.models import EntitySuperType, EntityType
 
 
 class Command(BaseCommand):
@@ -17,19 +18,18 @@ class Command(BaseCommand):
 
         for super_type in entity_types:
             super_type_obj, _ = EntitySuperType.objects.update_or_create(
-                short_name = super_type.get('short_name'),
+                short_name=super_type.get('short_name'),
                 defaults={
                     'name': super_type.get('name'),
                     'nf_icon': super_type.get('nf_icon'),
                 }
             )
             for entity_type in super_type.get('types'):
-                type_obj = EntityType.objects.update_or_create(
-                    short_name = entity_type.get('short_name'),
-                    super_type = super_type_obj,
+                EntityType.objects.update_or_create(
+                    short_name=entity_type.get('short_name'),
+                    super_type=super_type_obj,
                     defaults={
                         'name': entity_type.get('name'),
                         'nf_icon': entity_type.get('nf_icon'),
                     }
                 )
-

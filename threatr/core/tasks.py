@@ -1,12 +1,12 @@
-import pkgutil, importlib, inspect
+import importlib
+import inspect
 import logging
+import pkgutil
 
 from django.utils import timezone
 
 from threatr.core.models import Request, VendorCredentials
 from threatr.modules.module import AnalysisModule
-from django_q.tasks import async_task, result
-from timeit import default_timer as timer
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,8 @@ class ModulesLoader:
 
     def list_modules(self) -> {type}:
         for _, modname, _ in pkgutil.walk_packages(path=self.root_module.__path__,
-                                                              prefix=self.root_module.__name__ + '.',
-                                                              onerror=lambda x: None):
+                                                   prefix=self.root_module.__name__ + '.',
+                                                   onerror=lambda x: None):
             module = importlib.import_module(modname)
             for name in dir(module):
                 obj = getattr(module, name)
@@ -32,12 +32,12 @@ class ModulesLoader:
             self.list_modules()
         for c in self.module_classes:
             logger.info(f'Loading analysis module {c} for [{c.vendor()}]')
-            if request.super_type.short_name.lower() in c.handled_super_types() and request.type.short_name.lower() in c.handled_types():
+            if request.super_type.short_name.lower() in c.handled_super_types() and request.type.short_name.lower() in c.handled_types():  # noqa: E501
                 candidates.add(c)
         return candidates
 
 
-def launch_module(request: Request, handler:type) -> bool:
+def launch_module(request: Request, handler: type) -> bool:
     credentials = VendorCredentials.objects.filter(vendor=handler.unique_identifier())
     if not credentials:
         logger.error(f'No credentials found for module {handler.unique_identifier()}')
@@ -61,7 +61,7 @@ def launch_module(request: Request, handler:type) -> bool:
         return False
 
 
-def handle_request(request_id:str) :
+def handle_request(request_id: str):
     request = Request.objects.get(id=request_id)
     request.status = Request.Status.SUCCEEDED
     request.save()

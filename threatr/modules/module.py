@@ -31,7 +31,7 @@ class AnalysisModule(ABC):
         pass
 
     @abstractmethod
-    def __init__(self, request:Request):
+    def __init__(self, request: Request):
         pass
 
     @abstractmethod

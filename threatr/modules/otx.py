@@ -1,5 +1,6 @@
 import json
 import logging
+
 import pytz
 from OTXv2 import IndicatorTypes, OTXv2
 from dateutil.parser import parse
@@ -25,6 +26,7 @@ OTX_TYPES_MAPPING = {
 }
 
 logger = logging.getLogger(__name__)
+
 
 class OTX(AnalysisModule):
     request: Request = None
@@ -56,7 +58,7 @@ class OTX(AnalysisModule):
 
     @classmethod
     def handled_types(cls) -> [str]:
-        return ['ipv4','ipv6','domain','sha256']
+        return ['ipv4', 'ipv6', 'domain', 'sha256']
 
     def fail_fast(self) -> bool:
         if 'api_key' not in self.credentials:
@@ -92,9 +94,9 @@ class OTX(AnalysisModule):
 
         # Create or update root entity
         root, created = Entity.objects.update_or_create(
-            name = self.request.value,
-            super_type = self.request.super_type,
-            type = self.request.type,
+            name=self.request.value,
+            super_type=self.request.super_type,
+            type=self.request.type,
         )
         if created:
             root.attributes = {'source_vendor': self.vendor()}
@@ -106,9 +108,9 @@ class OTX(AnalysisModule):
             for r in self.vendor_response["url_list"]["url_list"]:
                 if "result" in r:
                     url, created = Entity.objects.update_or_create(
-                        name = r["url"].strip(),
-                        super_type = EntitySuperType.get_types().get('OBSERVABLE'),
-                        type = EntityType.get_types('OBSERVABLE').get('URL'),
+                        name=r["url"].strip(),
+                        super_type=EntitySuperType.get_types().get('OBSERVABLE'),
+                        type=EntityType.get_types('OBSERVABLE').get('URL'),
                     )
                     if created:
                         url.attributes = {'source_vendor': self.vendor()}
@@ -116,9 +118,9 @@ class OTX(AnalysisModule):
                     entities.append(url)
 
                     relation, created = EntityRelation.objects.update_or_create(
-                        name = 'serves',
-                        obj_from = root,
-                        obj_to = url,
+                        name='serves',
+                        obj_from=root,
+                        obj_to=url,
                     )
                     if created:
                         relation.attributes = {'source_vendor': self.vendor()}
@@ -133,14 +135,14 @@ class OTX(AnalysisModule):
                 record_type = r.get('record_type').strip()
                 address = r.get('address').strip()
                 event, created = Event.objects.update_or_create(
-                    name = f'{record_type} {address}',
-                    type = EntityType.get_types('EVENT').get('PASSIVE_DNS'),
-                    first_seen = parse(r["first"]).astimezone(pytz.utc),
-                    last_seen = parse(r["last"]).astimezone(pytz.utc),
+                    name=f'{record_type} {address}',
+                    type=EntityType.get_types('EVENT').get('PASSIVE_DNS'),
+                    first_seen=parse(r["first"]).astimezone(pytz.utc),
+                    last_seen=parse(r["last"]).astimezone(pytz.utc),
                     involved_entity=root,
                     defaults={
-                        'count':1,
-                        'attributes':{'source_vendor': self.vendor()}
+                        'count': 1,
+                        'attributes': {'source_vendor': self.vendor()}
                     }
                 )
                 if created:
@@ -151,7 +153,7 @@ class OTX(AnalysisModule):
                     event.save()
                 events.append(event)
 
-        if 'pulse_info' in self.vendor_response.get('general') and self.vendor_response.get('general').get('pulse_info').get('count', 0) > 0:
+        if 'pulse_info' in self.vendor_response.get('general') and self.vendor_response.get('general').get('pulse_info').get('count', 0) > 0:  # noqa: E501
             for r in self.vendor_response.get('general').get('pulse_info').get('pulses'):
                 references = r.get('references')
                 source_url = ''
@@ -159,9 +161,9 @@ class OTX(AnalysisModule):
                     source_url = references[0]
                 if source_url:
                     doc, created = Entity.objects.update_or_create(
-                        name = r.get('name'),
-                        super_type = EntitySuperType.get_types().get('EXT_DOC'),
-                        type = EntityType.get_types('EXT_DOC').get('REPORT'),
+                        name=r.get('name'),
+                        super_type=EntitySuperType.get_types().get('EXT_DOC'),
+                        type=EntityType.get_types('EXT_DOC').get('REPORT'),
                         defaults={
                             'source_url': source_url,
                             'description': r.get('description', '')
@@ -181,15 +183,16 @@ class OTX(AnalysisModule):
                     doc.save()
                     entities.append(doc)
                     relation, _ = EntityRelation.objects.update_or_create(
-                        name = 'documents',
-                        obj_from = doc,
-                        obj_to = root,
-                        defaults={'attributes':{'source_vendor': self.vendor()}}
+                        name='documents',
+                        obj_from=doc,
+                        obj_to=root,
+                        defaults={'attributes': {'source_vendor': self.vendor()}}
                     )
                     relations.append(relation)
 
         if 'analysis' in self.vendor_response and 'analysis' in self.vendor_response.get('analysis'):
             analysis = self.vendor_response.get('analysis').get('analysis')
+            analysis_date = None
             if analysis:
                 analysis_date = parse(analysis["datetime_int"]).astimezone(pytz.utc)
                 if 'info' in analysis and 'results' in analysis.get('info'):
@@ -208,18 +211,18 @@ class OTX(AnalysisModule):
                                 if ':' in ip:
                                     ip_type = EntityType.get_types('OBSERVABLE').get('IPV6')
                                 ip_obj, created = Entity.objects.update_or_create(
-                                    name = ip,
-                                    super_type = EntitySuperType.get_types().get('OBSERVABLE'),
-                                    type = ip_type,
+                                    name=ip,
+                                    super_type=EntitySuperType.get_types().get('OBSERVABLE'),
+                                    type=ip_type,
                                 )
                                 if created:
                                     ip_obj.attributes = {'source_vendor': self.vendor()}
                                     ip_obj.save()
                                 entities.append(ip_obj)
                                 ip_rel, created = EntityRelation.objects.update_or_create(
-                                    name = 'connects to',
-                                    obj_from = root,
-                                    obj_to = ip_obj,
+                                    name='connects to',
+                                    obj_from=root,
+                                    obj_to=ip_obj,
                                 )
                                 if created:
                                     ip_rel.attributes = {'source_vendor': self.vendor()}
@@ -233,16 +236,16 @@ class OTX(AnalysisModule):
                             if k not in root.attributes and type(v) not in [list, dict]:
                                 root.attributes[k] = v
                         root.save()
-                    if results and 'detection' in results and 'alerts' in results:
+                    if results and 'detection' in results and 'alerts' in results and analysis_date:
                         event, _ = Event.objects.update_or_create(
-                            name = results.get('detection'),
-                            type = EntityType.get_types('EVENT').get('AV_DETECTION'),
-                            first_seen = analysis_date,
-                            last_seen = analysis_date,
-                            involved_entity = root,
+                            name=results.get('detection'),
+                            type=EntityType.get_types('EVENT').get('AV_DETECTION'),
+                            first_seen=analysis_date,
+                            last_seen=analysis_date,
+                            involved_entity=root,
                             defaults={
                                 'description': ', '.join(results.get('alerts')),
-                                'attributes':{'source_vendor': self.vendor()},
+                                'attributes': {'source_vendor': self.vendor()},
                                 'count': 1,
                             }
                         )
@@ -254,5 +257,3 @@ class OTX(AnalysisModule):
 
     def get_results(self) -> ([Entity], [EntityRelation], [Event]):
         return self.entities, self.relations, self.events
-
-

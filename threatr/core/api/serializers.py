@@ -1,17 +1,21 @@
-from rest_framework import serializers
-
-from threatr.core.models import EntitySuperType, EntityType, Request, Entity, EntityRelation, Event
 from json import JSONEncoder
 from uuid import UUID
 
+from rest_framework import serializers
+
+from threatr.core.models import EntitySuperType, EntityType, Request, Entity, EntityRelation, Event
+
 old_default = JSONEncoder.default
+
 
 def new_default(self, obj):
     if isinstance(obj, UUID):
         return str(obj)
     return old_default(self, obj)
 
+
 JSONEncoder.default = new_default
+
 
 class EntitySuperTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,6 +31,7 @@ class EntityTypeSerializer(serializers.ModelSerializer):
 
 class FullEntitySuperTypeSerializer(serializers.ModelSerializer):
     sub_types = EntityTypeSerializer(many=True)
+
     class Meta:
         model = EntitySuperType
         fields = '__all__'
@@ -35,6 +40,7 @@ class FullEntitySuperTypeSerializer(serializers.ModelSerializer):
 class EntitySerializer(serializers.ModelSerializer):
     super_type = EntitySuperTypeSerializer()
     type = EntityTypeSerializer()
+
     class Meta:
         model = Entity
         fields = '__all__'
@@ -50,6 +56,7 @@ class EntityRelationSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     type = EntityTypeSerializer()
+
     class Meta:
         model = Event
         fields = '__all__'

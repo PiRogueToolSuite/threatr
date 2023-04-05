@@ -8,8 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from threatr.core.api.serializers import RequestSerializer, EntitySerializer, EventSerializer, EntityRelationSerializer, \
-    EntitySuperTypeSerializer, FullEntitySuperTypeSerializer
+from threatr.core.api.serializers import RequestSerializer, EntitySerializer, EventSerializer, \
+    EntityRelationSerializer, FullEntitySuperTypeSerializer
 from threatr.core.models import Request, EntitySuperType, EntityType, Entity, Event, EntityRelation
 from threatr.core.tasks import handle_request
 
@@ -66,7 +66,7 @@ class RequestView(mixins.CreateModelMixin,
                 'entities': entities_serializer.data,
                 'events': event_serializer.data,
                 'relations': relation_serializer.data,
-                'graph': self.__get_mermaid_graph(entities+[root_entity], relations)
+                'graph': self.__get_mermaid_graph(entities + [root_entity], relations)
             }
             return JsonResponse(result, status=status.HTTP_200_OK)
 
@@ -81,12 +81,12 @@ class RequestView(mixins.CreateModelMixin,
             return Response({'error': 'Requested value cannot be empty'}, status=status.HTTP_406_NOT_ACCEPTABLE)
         try:
             e_super_type = EntitySuperType.objects.get(short_name=e_super_type.upper())
-        except:
+        except Exception:
             return Response({'error': 'Selected entity super type not supported'},
                             status=status.HTTP_406_NOT_ACCEPTABLE)
         try:
             e_type = EntityType.objects.get(short_name=e_type.upper())
-        except:
+        except Exception:
             return Response({'error': 'Selected entity type not supported'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         # Check if the requested entity already exists
