@@ -304,7 +304,7 @@ SPECTACULAR_SETTINGS = {
 # Worker configuration
 # ------------------------------------------------------------------------------
 Q_CLUSTER = {
-    "name": "Backend",
+    "name": "Threatr worker backend",
     "workers": 4,
     "recycle": 1,
     "retry": 36 * 60,
