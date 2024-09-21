@@ -35,7 +35,7 @@ def launch_module(request: Request, handler) -> bool:
 
 def handle_request(request_id: str):
     request = Request.objects.get(id=request_id)
-    request.status = Request.Status.SUCCEEDED
+    request.status = Request.Status.PROCESSING
     request.save()
     loader = ModulesLoader()
     modules = loader.get_candidate_classes(request)
