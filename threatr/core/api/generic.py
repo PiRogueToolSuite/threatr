@@ -1,7 +1,9 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.http import JsonResponse, HttpResponse
 from django_q.tasks import async_task
+from django_q.status import Stat
 from rest_framework import mixins, status
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.decorators import action
@@ -23,7 +25,7 @@ from threatr.core.models import (
     EntityType,
     Entity,
     Event,
-    EntityRelation,
+    EntityRelation, VendorCredentials,
 )
 from threatr.core.tasks import handle_request
 
@@ -60,17 +62,52 @@ class ModulesView(GenericViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def list(self, _):
+    @staticmethod
+    def get_module_list():
         ml = ModulesLoader()
         available_modules = []
         for module in ml.list_modules():
+            credentials = VendorCredentials.objects.filter(vendor=module.unique_identifier())
             available_modules.append({
                 'id': module.unique_identifier(),
                 'vendor': module.vendor(),
+                'configured': bool(credentials),
                 'description': module.description(),
                 'supported_types': module.supported_types()
             })
-        return JsonResponse(available_modules, status=status.HTTP_200_OK, safe=False)
+        return available_modules
+
+    def list(self, _):
+        return JsonResponse(ModulesView.get_module_list(), status=status.HTTP_200_OK, safe=False)
+
+
+class StatusView(GenericViewSet):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, _):
+        commit_hash = ''
+        # Undefined in dev mode
+        try:
+            commit_hash = settings.GIT_COMMIT_HASH
+        except: pass
+        status_data = {
+            'git_commit_hash': commit_hash,
+            'available_modules': ModulesView.get_module_list(),
+            'workers': [
+                {
+                    'id':stat.cluster_id,
+                    'status': stat.status,
+                    'uptime': stat.uptime(),
+                    'enqueued_tasks': stat.task_q_size,
+                    'available_results': stat.done_q_size,
+                }
+                for stat in Stat.get_all()
+            ],
+            'cached_entities': Entity.objects.count(),
+            'cached_relations': EntityRelation.objects.count()
+        }
+        return JsonResponse(status_data, status=status.HTTP_200_OK, safe=False)
 
 
 class RequestView(
@@ -168,8 +205,6 @@ class RequestView(
         if not force:
             # Get the latest corresponding request
             requests = Request.objects.filter(
-                # Q(status=Request.Status.CREATED) | Q(status=Request.Status.PROCESSING) | Q(
-                #     status=Request.Status.SUCCEEDED),
                 value=value,
                 super_type=e_super_type,
                 type=e_type,
