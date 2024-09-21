@@ -105,6 +105,7 @@ class StatusView(GenericViewSet):
                 for stat in Stat.get_all()
             ],
             'cached_entities': Entity.objects.count(),
+            'cached_events': Event.objects.count(),
             'cached_relations': EntityRelation.objects.count()
         }
         return JsonResponse(status_data, status=status.HTTP_200_OK, safe=False)
