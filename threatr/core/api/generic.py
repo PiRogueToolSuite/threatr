@@ -67,11 +67,11 @@ class ModulesView(GenericViewSet):
         ml = ModulesLoader()
         available_modules = []
         for module in ml.list_modules():
-            credentials = VendorCredentials.objects.filter(vendor=module.unique_identifier())
+            credentials = VendorCredentials.objects.filter(vendor=module.unique_identifier()).count()
             available_modules.append({
                 'id': module.unique_identifier(),
                 'vendor': module.vendor(),
-                'configured': bool(credentials),
+                'configured': credentials,
                 'description': module.description(),
                 'supported_types': module.supported_types()
             })
