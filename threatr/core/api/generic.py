@@ -90,13 +90,13 @@ class StatusView(GenericViewSet):
         # Undefined in dev mode
         try:
             commit_hash = settings.GIT_COMMIT_HASH
-        except: pass
+        except: pass  # noqa: E722, E701
         status_data = {
             'git_commit_hash': commit_hash,
             'available_modules': ModulesView.get_module_list(),
             'workers': [
                 {
-                    'id':stat.cluster_id,
+                    'id': stat.cluster_id,
                     'status': stat.status,
                     'uptime': stat.uptime(),
                     'enqueued_tasks': stat.task_q_size,
