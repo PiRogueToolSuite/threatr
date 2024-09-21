@@ -6,6 +6,7 @@ from django.urls import include, path
 from django.views import defaults as default_views
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.schemas import get_schema_view
 
 urlpatterns = [
     # path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -22,12 +23,21 @@ if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
 
 # API URLS
+api_patterns = [
+    path("api/", include("config.api_router"))
+]
+
+urlpatterns += api_patterns
+
+# API URLS
 urlpatterns += [
-    # API base url
-    path("api/", include("config.api_router")),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
-    path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
+    path('api/schema/', get_schema_view(
+        title='Threatr Client API',
+        version="0.1.0",
+        patterns=api_patterns
+    ), name='api-schema'),
     path(
         "api/docs/",
         SpectacularSwaggerView.as_view(url_name="api-schema"),

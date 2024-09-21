@@ -60,28 +60,13 @@ class OTX(AnalysisModule):
         return "Get intelligence from OTX Alien Vault."
 
     @classmethod
-    def handled_super_types(cls) -> [str]:
-        return ["observable"]
-
-    @classmethod
-    def handled_types(cls) -> [str]:
-        return ["ipv4", "ipv6", "domain", "sha256"]
+    def supported_types(cls) -> dict[str, list[str]]:
+        return {
+            'observable': ['ipv4', 'ipv6', 'domain', 'sha256', 'url']
+        }
 
     def fail_fast(self) -> bool:
-        if "api_key" not in self.credentials:
-            logger.error("Not API key provided")
-            return True
-        if self.request.super_type.short_name.lower() not in self.handled_super_types():
-            logger.error(
-                f"This module cannot handle the requested super-type [{self.request.super_type.short_name}]"
-            )
-            return True
-        if self.request.type.short_name.lower() not in self.handled_types():
-            logger.error(
-                f"This module cannot handle the requested type [{self.request.type.short_name}]"
-            )
-            return True
-        return False
+        return super().fail_fast()
 
     def execute_request(self) -> dict:
         key = self.credentials.get("api_key")

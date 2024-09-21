@@ -21,6 +21,7 @@ django-redis==5.2.0  # https://github.com/jazzband/django-redis
 # Django REST Framework
 djangorestframework==3.15.1  # https://github.com/encode/django-rest-framework
 django-cors-headers==4.3.1 # https://github.com/adamchainz/django-cors-headers
+coreapi==2.3.3 # Included explicitly since it's defined optional by djangorestframework
 # DRF-spectacular for api documentation
 drf-spectacular==0.27.2  # https://github.com/tfranzel/drf-spectacular
 django-q2==1.6.2
@@ -33,4 +34,5 @@ pytz
 # ------------------------------------------------------------------------------
 OTXv2
 vt-py
+shodan==1.31.0
 scarlet-shark-client==1.0.5

@@ -334,3 +334,4 @@ threatr/media/
 .envs/*
 !.envs/.local/
 trash
+.idea/
