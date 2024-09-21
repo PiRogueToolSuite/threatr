@@ -1,15 +1,11 @@
 import json
 import logging
 from scarlet_shark_client.client import ClientFactory
-import pytz
-from dateutil.parser import parse
 
 from threatr.core.models import (
     Entity,
     EntityRelation,
     Request,
-    EntitySuperType,
-    EntityType,
     Event,
 )
 from threatr.modules.module import AnalysisModule

@@ -44,7 +44,6 @@ class ModulesLoader:
             self.supported_types[st] = list(t)
         return self.supported_types
 
-
     def get_candidate_classes(self, request: Request) -> {type}:
         candidates = set()
         if not self.module_classes:

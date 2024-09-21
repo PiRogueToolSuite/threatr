@@ -1,6 +1,5 @@
 import logging
 from abc import abstractmethod, ABC
-from functools import cache
 
 from slugify import slugify
 
@@ -64,7 +63,7 @@ class AnalysisModule(ABC):
     def get_results(self) -> ([Entity], [EntityRelation], [Event]):
         pass
 
-    def fail_fast(self) -> bool:
+    def fail_fast(self) -> bool:  # noqa: F811
         if "api_key" not in self.credentials:
             logger.error("Not API key provided")
             return True
@@ -73,7 +72,8 @@ class AnalysisModule(ABC):
                 f"This module cannot handle the requested super-type [{self.request.super_type.short_name}]"
             )
             return True
-        if self.request.type.short_name.lower() not in self.supported_types().get(self.request.super_type.short_name.lower()):
+        if self.request.type.short_name.lower() not in self.supported_types().get(
+            self.request.super_type.short_name.lower()):  # noqa: E125
             logger.error(
                 f"This module cannot handle the requested type [{self.request.type.short_name}]"
             )

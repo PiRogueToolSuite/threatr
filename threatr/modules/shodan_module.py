@@ -62,7 +62,7 @@ class ShodanModule(AnalysisModule):
         except APIError as e:
             logger.exception(e)
             self.vendor_response = {}
-        with open(f"/app/shodan.json", mode="w") as out:
+        with open("/app/shodan.json", mode="w") as out:
             json.dump(self.vendor_response, out)
         return self.vendor_response
 
@@ -143,9 +143,9 @@ class ShodanModule(AnalysisModule):
         country = self.vendor_response.get('country_name', '')
         city = self.vendor_response.get('city', '')
         location_info = []
-        if country: location_info.append(country)
-        if city: location_info.append(city)
-        if not location_info: location_info.append('Server location')
+        if country: location_info.append(country)  # noqa: E701
+        if city: location_info.append(city)  # noqa: E701
+        if not location_info: location_info.append('Server location')  # noqa: E701
         l, _ = Entity.objects.update_or_create(
             name=' - '.join(location_info),
             super_type=EntitySuperType.get_types().get("OBSERVABLE"),
@@ -170,7 +170,6 @@ class ShodanModule(AnalysisModule):
         relations.append(relation)
         return entities, relations
 
-
     def __process_services(self, server: Entity) -> (list[Entity], list[EntityRelation]):
         entities = []
         relations = []
@@ -182,10 +181,10 @@ class ShodanModule(AnalysisModule):
                 service_protocol = service.get('_shodan').get('module').split('-')[0].upper()
             service_port = service.get('port', '')
             service_transport = service.get('transport', '')
-            if service_protocol: service_name = f'{service_protocol} service'
-            if service_product: service_name += f' {service_product}'
-            if service_port: service_name += f' listening on port {service_port}'
-            if service_transport: service_name += f' [{service_transport.upper()}]'
+            if service_protocol: service_name = f'{service_protocol} service'  # noqa: E701
+            if service_product: service_name += f' {service_product}'  # noqa: E701
+            if service_port: service_name += f' listening on port {service_port}'  # noqa: E701
+            if service_transport: service_name += f' [{service_transport.upper()}]'  # noqa: E701
             s, _ = Entity.objects.update_or_create(
                 name=service_name,
                 super_type=EntitySuperType.get_types().get("OBSERVABLE"),
@@ -210,12 +209,11 @@ class ShodanModule(AnalysisModule):
             relations.append(relation)
         return entities, relations
 
-
     def __process_server(self, root_entity: Entity) -> Entity:
         server_name = f'Server @{root_entity.name}'
         hostnames = self.vendor_response.get('hostnames', []).copy()
         server_shorter_hostname, _ = ModuleUtils.get_shorter_entry(hostnames)
-        if server_shorter_hostname: server_name = server_shorter_hostname
+        if server_shorter_hostname: server_name = server_shorter_hostname  # noqa: E701
         s, _ = Entity.objects.update_or_create(
             name=server_name,
             super_type=EntitySuperType.get_types().get("DEVICE"),

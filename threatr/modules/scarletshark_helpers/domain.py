@@ -11,7 +11,7 @@ class Domain:
         self.client = client
 
     @staticmethod
-    def create_entity(domain_data: dict, vendor: str='ScarletShark')-> Optional[Entity]:
+    def create_entity(domain_data: dict, vendor: str = 'ScarletShark') -> Optional[Entity]:
         domain_name = domain_data.get('domain', None)
         if not domain_name:
             return None
@@ -39,9 +39,4 @@ class Domain:
         return None
 
     def search(self):
-        domain: Entity = None
-        try:
-            data = self.client.search_domain(self.domain_name)
-        except Exception:
-            # Something bad happened or there is no result
-            return None
+        return None
