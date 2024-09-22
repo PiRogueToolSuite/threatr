@@ -83,12 +83,12 @@ class ScarletShark(AnalysisModule):
         return self.vendor_response
 
     def __process_threat_actor(self, actor_id):
-        if actor_id < 1: return None
+        if actor_id < 1: return None  # noqa: E701
         result = self.client.search_threat_actors(threat_actor_id=actor_id)
         print(result)
-        if not result: return None
+        if not result: return None  # noqa: E701
         aliases = result.get('aliases', [])
-        if not aliases: return None
+        if not aliases: return None  # noqa: E701
         name = aliases.pop(0).get('alias_name')
         description = result.get('description', '')
         actor, _ = Entity.objects.update_or_create(
@@ -104,7 +104,7 @@ class ScarletShark(AnalysisModule):
         actor.save()
         for alias in aliases:
             alias_name = alias.get('alias_name', '')
-            if not alias_name: continue
+            if not alias_name: continue  # noqa: E701
             a, _ = Entity.objects.update_or_create(
                 name=alias_name.strip(),
                 super_type=EntitySuperType.get_types().get("ACTOR"),

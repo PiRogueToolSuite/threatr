@@ -11,7 +11,6 @@ def merge_events(event_list: list[Event]):
         if not merged or event.first_seen.date() > merged[-1].last_seen.date():
             merged.append(event)
         else:
-            # If the current interval overlaps with the previous one, merge them by updating the end value of the last interval
             merged[-1].last_seen = max(merged[-1].last_seen, event.last_seen)
             merged[-1].count += event.count
             dropped.append(event)
