@@ -86,7 +86,7 @@ class ShodanModule(AnalysisModule):
     def __process_domains(self, root_entity: Entity) -> (list[Entity], list[EntityRelation]):
         domains = []
         relations = []
-        for domain in self.vendor_response.get('domains'):
+        for domain in self.vendor_response.get('domains', []):
             d, _ = Entity.objects.update_or_create(
                 name=domain.strip(),
                 super_type=EntitySuperType.get_types().get("OBSERVABLE"),
