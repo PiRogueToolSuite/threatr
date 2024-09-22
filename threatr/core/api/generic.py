@@ -1,3 +1,7 @@
+import datetime
+from datetime import timedelta, datetime
+
+import pytz
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, QuerySet
@@ -28,6 +32,7 @@ from threatr.core.models import (
     EntityRelation, VendorCredentials,
 )
 from threatr.core.tasks import handle_request
+from threatr.core.utils import merge_similar_events
 
 
 class TypesView(mixins.ListModelMixin, GenericViewSet):
@@ -144,7 +149,12 @@ class RequestView(
         ).all()
         if output_format == "json":
             entity_serializer = EntitySerializer(root_entity)
-            event_serializer = EventSerializer(events, many=True)
+            # Merge all existing events
+            merged_events = merge_similar_events(events)
+            # Clean up old requests
+            time_threshold = datetime.now(tz=pytz.UTC) - timedelta(days=30)
+            Request.objects.filter(created_at__lte=time_threshold).delete()
+            event_serializer = EventSerializer(merged_events, many=True)
             relation_serializer = EntityRelationSerializer(relations, many=True)
             entities = []
             for relation in relations:
