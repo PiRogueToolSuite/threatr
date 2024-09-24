@@ -117,7 +117,7 @@ class ModuleUtils:
     @staticmethod
     def get_shorter_entry(entries: list[str]) -> (str, list[str]):
         if not entries:
-            return ''
+            return '', []
         shorter_entry = entries[0].strip()
         length = 999999999
         index = 0
