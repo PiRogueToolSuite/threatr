@@ -29,10 +29,11 @@ django-q2==1.7.2
 # Utils
 # ------------------------------------------------------------------------------
 pytz
+colander-data-converter
 
 # Vendors
 # ------------------------------------------------------------------------------
 OTXv2
 vt-py
 shodan==1.31.0
-scarlet-shark-client==1.0.5
+scarlet-shark-client>=1.0.6

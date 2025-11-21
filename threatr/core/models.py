@@ -66,7 +66,8 @@ class EntityType(models.Model):
         verbose_name_plural = "Entity types"
         unique_together = ["short_name", "super_type"]
 
-    short_name = models.CharField(max_length=32, primary_key=True, unique=True)
+    id = models.UUIDField(default=uuid.uuid4, null=False, unique=True, primary_key=True)
+    short_name = models.CharField(max_length=32, primary_key=False)
     name = models.CharField(
         max_length=512,
         verbose_name=_("name"),
@@ -129,7 +130,7 @@ class Request(models.Model):
     type = models.ForeignKey(
         EntityType,
         on_delete=models.CASCADE,
-        related_name="request_type",
+        related_name="request_type"
     )
 
 
@@ -187,7 +188,7 @@ class Entity(models.Model):
         EntityType,
         on_delete=models.CASCADE,
         related_name="type_of",
-        related_query_name="q_type_of",
+        related_query_name="q_type_of"
     )
     tlp = models.CharField(
         max_length=6,

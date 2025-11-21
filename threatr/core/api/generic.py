@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.http import JsonResponse, HttpResponse
+from django.views.generic import DetailView
 from django_q.tasks import async_task
 from django_q.status import Stat
 from rest_framework import mixins, status
@@ -14,12 +15,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from threatr.core.api.models import AvailableModule, ServerStatus, WorkerStatus
 from threatr.core.api.serializers import (
     RequestSerializer,
     EntitySerializer,
     EventSerializer,
     EntityRelationSerializer,
-    FullEntitySuperTypeSerializer,
+    FullEntitySuperTypeSerializer, AvailableModuleSerializer, ServerStatusSerializer,
 )
 from threatr.core.loader import ModulesLoader
 from threatr.core.models import (
@@ -62,9 +64,11 @@ class TypesView(mixins.ListModelMixin, GenericViewSet):
             json_dumps_params={'sort_keys': True})
 
 
-class ModulesView(GenericViewSet):
+class ModulesView(GenericViewSet, mixins.ListModelMixin,):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    queryset = AvailableModule.objects.none()
+    serializer_class = AvailableModuleSerializer
 
     @staticmethod
     def get_module_list():
@@ -72,47 +76,57 @@ class ModulesView(GenericViewSet):
         available_modules = []
         for module in ml.list_modules():
             credentials = VendorCredentials.objects.filter(vendor=module.unique_identifier()).count()
-            available_modules.append({
+            am = AvailableModule(**{
                 'id': module.unique_identifier(),
                 'vendor': module.vendor(),
                 'configured': credentials,
                 'description': module.description(),
-                'supported_types': module.supported_types()
+                # 'supported_types': module.supported_types().values()
             })
+            am.supported_types.extend(module.supported_types().values())
+            available_modules.append(am)
         return available_modules
 
-    def list(self, _):
-        return JsonResponse(ModulesView.get_module_list(), status=status.HTTP_200_OK, safe=False)
+    def list(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_module_list(), many=True)
+        return Response(serializer.data)
 
 
 class StatusView(GenericViewSet):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    queryset = ServerStatus.objects.none()
+    serializer_class = ServerStatusSerializer
+    detail = False
 
-    def list(self, _):
+    @action(methods=['get'], detail=False)
+    def now(self, request, *args, **kwargs):
         commit_hash = ''
         # Undefined in dev mode
         try:
             commit_hash = settings.GIT_COMMIT_HASH
         except: pass  # noqa: E722, E701
-        status_data = {
+        status_data = ServerStatus(**{
             'git_commit_hash': commit_hash,
-            'available_modules': ModulesView.get_module_list(),
-            'workers': [
-                {
-                    'id': stat.cluster_id,
-                    'status': stat.status,
-                    'uptime': stat.uptime(),
-                    'enqueued_tasks': stat.task_q_size,
-                    'available_results': stat.done_q_size,
-                }
-                for stat in Stat.get_all()
-            ],
             'cached_entities': Entity.objects.count(),
             'cached_events': Event.objects.count(),
             'cached_relations': EntityRelation.objects.count()
-        }
-        return JsonResponse(status_data, status=status.HTTP_200_OK, safe=False)
+        })
+        workers = [
+            WorkerStatus(**{
+                'id': stat.cluster_id,
+                'status': stat.status,
+                'uptime': stat.uptime(),
+                'enqueued_tasks': stat.task_q_size,
+                'available_results': stat.done_q_size,
+            })
+            for stat in Stat.get_all()
+        ]
+        status_data.available_modules.extend(ModulesView.get_module_list())
+        status_data.workers.extend(workers)
+        # return status_data
+        serializer = self.get_serializer(status_data, many=False)
+        return Response(serializer.data)
 
 
 class RequestView(

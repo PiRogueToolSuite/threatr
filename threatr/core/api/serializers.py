@@ -3,6 +3,7 @@ from uuid import UUID
 
 from rest_framework import serializers
 
+from threatr.core.api.models import AvailableModule, WorkerStatus, ServerStatus
 from threatr.core.models import (
     EntitySuperType,
     EntityType,
@@ -51,6 +52,27 @@ class EntitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Entity
         fields = "__all__"
+
+
+class AvailableModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AvailableModule
+        fields = "__all__"
+
+
+class WorkerStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkerStatus
+        fields = "__all__"
+
+
+class ServerStatusSerializer(serializers.ModelSerializer):
+    available_modules = AvailableModuleSerializer(many=True, read_only=True)
+    workers = WorkerStatusSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ServerStatus
+        exclude = ["_id"]
 
 
 class EntityRelationSerializer(serializers.ModelSerializer):
