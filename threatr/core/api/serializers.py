@@ -72,7 +72,7 @@ class ServerStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ServerStatus
-        exclude = ["_id"]
+        exclude = ["id"]
 
 
 class EntityRelationSerializer(serializers.ModelSerializer):
