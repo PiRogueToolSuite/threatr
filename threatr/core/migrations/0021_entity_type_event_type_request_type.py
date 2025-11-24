@@ -5,9 +5,17 @@ import django.db.models.deletion
 
 
 def link_entities(apps, model):
+    EntitySuperType = apps.get_model("core", "EntitySuperType")
     EntityType = apps.get_model("core", "EntityType")
+    Event = apps.get_model("core", "Event")
     for entity in model.objects.all():
-        entity.type = EntityType.objects.get(short_name=entity.type_old, super_type=entity.super_type)
+        super_type = entity.super_type
+        if isinstance(entity, Event):
+            super_type = EntitySuperType.objects.get(short_name="EVENT")
+        entity.type = EntityType.objects.get(
+            short_name=entity.type_old,
+            super_type=super_type
+        )
         entity.save()
 
 
