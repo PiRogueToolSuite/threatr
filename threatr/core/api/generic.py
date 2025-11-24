@@ -5,7 +5,6 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.http import JsonResponse, HttpResponse
-from django.views.generic import DetailView
 from django_q.tasks import async_task
 from django_q.status import Stat
 from rest_framework import mixins, status
