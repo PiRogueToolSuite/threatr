@@ -85,7 +85,6 @@ class ScarletShark(AnalysisModule):
     def __process_threat_actor(self, actor_id):
         if actor_id < 1: return None  # noqa: E701
         result = self.client.search_threat_actors(threat_actor_id=actor_id)
-        print(result)
         if not result: return None  # noqa: E701
         aliases = result.get('aliases', [])
         if not aliases: return None  # noqa: E701
