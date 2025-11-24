@@ -49,7 +49,7 @@ class AnalysisModule(ABC):
 
     @abstractmethod
     def fail_fast(self) -> bool:
-        pass
+        return False
 
     @abstractmethod
     def execute_request(self):
