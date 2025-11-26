@@ -1,0 +1,82 @@
+name: threatr-local
+
+volumes:
+  threatr_local_postgres_data: {}
+
+networks:
+  threatr-frontend:
+  threatr-backend:
+    driver: bridge
+
+services:
+  # Web front
+  threatr-local-front:
+    image: ghcr.io/piroguetoolsuite/threatr:main
+    platform: linux/amd64
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "grep", "-q", ":1388", "/proc/net/tcp" ]
+      interval: 30s
+      timeout: 2s
+      retries: 5
+    depends_on:
+      threatr-local-postgres:
+        condition: service_healthy
+      threatr-local-worker:
+        condition: service_started
+      threatr-local-redis:
+        condition: service_healthy
+    networks:
+      - threatr-frontend
+      - threatr-backend
+    command: /start
+    ports:
+      - "0.0.0.0:9080:5000"
+    env_file:
+      - .env
+
+  # Workers
+  threatr-local-worker:
+    image: ghcr.io/piroguetoolsuite/threatr:main
+    platform: linux/amd64
+    restart: unless-stopped
+    depends_on:
+      threatr-local-postgres:
+        condition: service_healthy
+      threatr-local-redis:
+        condition: service_healthy
+    networks:
+      - threatr-backend
+    command: /start-worker
+    env_file:
+      - .env
+
+  # Database
+  threatr-local-postgres:
+    image: postgres:15
+    platform: linux/amd64
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - threatr-backend
+    volumes:
+      - threatr_local_postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+  # Message queue
+  threatr-local-redis:
+    image: redis:6
+    platform: linux/amd64
+    restart: unless-stopped
+    networks:
+      - threatr-backend
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 2s
+      timeout: 3s
+      retries: 5

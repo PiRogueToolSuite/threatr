@@ -10,6 +10,8 @@ from django.utils.translation import gettext_lazy as _
 class VendorCredentials(models.Model):
     class Meta:
         ordering = ["last_usage"]
+        verbose_name = _("Vendor credentials")
+        verbose_name_plural = _("Vendor credentials")
         unique_together = ["vendor", "credentials"]
 
     id = models.UUIDField(
